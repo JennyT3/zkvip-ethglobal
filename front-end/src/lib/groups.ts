@@ -23,12 +23,12 @@ export type AvailableGroup = {
 const STORAGE_KEY = 'zkvip_joined_groups';
 const AVAILABLE_GROUPS_KEY = 'zkvip_available_groups';
 
-// Grupos pré-criados
+// Pre-created groups
 const DEFAULT_AVAILABLE_GROUPS: AvailableGroup[] = [
   {
     id: 'zk-builders',
     name: 'ZK Builders',
-    description: 'Discussões diárias sobre ZK, provas e tooling.',
+    description: 'Daily discussions about ZK, proofs and tooling.',
     minWld: 0.5,
     avatarBg: 'bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500',
     members: 124,
@@ -36,7 +36,7 @@ const DEFAULT_AVAILABLE_GROUPS: AvailableGroup[] = [
   {
     id: 'ethereum-sp',
     name: 'Ethereum São Paulo',
-    description: 'Eventos, meetups e grants da comunidade paulista.',
+    description: 'Events, meetups and grants from the São Paulo community.',
     minWld: 1,
     avatarBg: 'bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500',
     members: 89,
@@ -59,16 +59,16 @@ export const addJoinedGroup = (group: AvailableGroup): void => {
   
   const joinedGroups = getJoinedGroups();
   
-  // Verifica se o grupo já existe
+  // Check if group already exists
   if (joinedGroups.some((g) => g.id === group.id)) {
     return;
   }
 
-  // Cria o grupo com dados iniciais
+  // Create group with initial data
   const newGroup: Group = {
     ...group,
-    lastMessage: 'Bem-vindo ao grupo!',
-    lastSender: 'Sistema',
+    lastMessage: 'Welcome to the group!',
+    lastSender: 'System',
     unread: 0,
     joinedAt: new Date().toISOString(),
   };
@@ -77,12 +77,12 @@ export const addJoinedGroup = (group: AvailableGroup): void => {
   
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(joinedGroups));
-    // Dispara evento para atualizar outras partes da aplicação
+    // Dispatch event to update other parts of the application
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('groupsUpdated'));
     }
   } catch (error) {
-    console.error('Erro ao salvar grupo:', error);
+    console.error('Error saving group:', error);
   }
 };
 
@@ -103,7 +103,7 @@ export const updateGroupLastMessage = (
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(joinedGroups));
     } catch (error) {
-      console.error('Erro ao atualizar mensagem:', error);
+      console.error('Error updating message:', error);
     }
   }
 };
@@ -120,7 +120,7 @@ export const incrementUnread = (groupId: string): void => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(joinedGroups));
     } catch (error) {
-      console.error('Erro ao incrementar não lidas:', error);
+      console.error('Error incrementing unread:', error);
     }
   }
 };
@@ -137,12 +137,12 @@ export const clearUnread = (groupId: string): void => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(joinedGroups));
     } catch (error) {
-      console.error('Erro ao limpar não lidas:', error);
+      console.error('Error clearing unread:', error);
     }
   }
 };
 
-// Funções para gerenciar grupos disponíveis
+// Functions to manage available groups
 export const getAvailableGroups = (): AvailableGroup[] => {
   if (typeof window === 'undefined') return DEFAULT_AVAILABLE_GROUPS;
   
@@ -151,7 +151,7 @@ export const getAvailableGroups = (): AvailableGroup[] => {
     if (stored) {
       return JSON.parse(stored);
     }
-    // Se não existir, inicializa com os grupos padrão
+    // If it doesn't exist, initialize with default groups
     initializeAvailableGroups();
     return DEFAULT_AVAILABLE_GROUPS;
   } catch {
@@ -171,7 +171,7 @@ export const initializeAvailableGroups = (): void => {
       );
     }
   } catch (error) {
-    console.error('Erro ao inicializar grupos disponíveis:', error);
+    console.error('Error initializing available groups:', error);
   }
 };
 
@@ -182,21 +182,21 @@ export const createAvailableGroup = (
   avatarBg: string,
 ): AvailableGroup => {
   if (typeof window === 'undefined') {
-    throw new Error('Não é possível criar grupo no servidor');
+    throw new Error('Cannot create group on server');
   }
   
   const availableGroups = getAvailableGroups();
   
-  // Gera um ID único baseado no nome
+  // Generate unique ID based on name
   const id = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
   
-  // Verifica se já existe um grupo com esse ID
+  // Check if group with this ID already exists
   const existingGroup = availableGroups.find((g) => g.id === id);
   if (existingGroup) {
-    throw new Error('Já existe um grupo com esse nome');
+    throw new Error('A group with this name already exists');
   }
   
   const newGroup: AvailableGroup = {
@@ -212,11 +212,11 @@ export const createAvailableGroup = (
   
   try {
     localStorage.setItem(AVAILABLE_GROUPS_KEY, JSON.stringify(availableGroups));
-    // Dispara evento para atualizar outras partes da aplicação
+    // Dispatch event to update other parts of the application
     window.dispatchEvent(new Event('availableGroupsUpdated'));
     return newGroup;
   } catch (error) {
-    console.error('Erro ao criar grupo:', error);
+    console.error('Error creating group:', error);
     throw error;
   }
 };
@@ -231,7 +231,7 @@ export const removeAvailableGroup = (groupId: string): void => {
     localStorage.setItem(AVAILABLE_GROUPS_KEY, JSON.stringify(filteredGroups));
     window.dispatchEvent(new Event('availableGroupsUpdated'));
   } catch (error) {
-    console.error('Erro ao remover grupo disponível:', error);
+    console.error('Error removing available group:', error);
   }
 };
 

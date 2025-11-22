@@ -20,15 +20,15 @@ import { generateProof, generateRandomNonce, type ProofInputs } from '@/lib/zkPr
 import { getWldBalance } from '@/lib/wldBalance';
 
 const filterOptions = [
-  { key: 'all', label: 'Todos' },
+  { key: 'all', label: 'All' },
   { key: 'low', label: '≤ 1 WLD' },
 ];
 
 const proofSteps = [
-  'Checando saldo WLD',
-  'Gerando prova ZK',
-  'Enviando prova',
-  'Confirmando acesso',
+  'Checking WLD balance',
+  'Generating ZK proof',
+  'Sending proof',
+  'Confirming access',
 ];
 
 type StepStatus = 'pending' | 'active' | 'done';
@@ -42,6 +42,7 @@ export default function Groups() {
   const [isCreating, setIsCreating] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupMinWld, setNewGroupMinWld] = useState('');
+  const [autoJoin, setAutoJoin] = useState(true);
   const [error, setError] = useState('');
   const [proofState, setProofState] = useState<'idle' | 'running' | 'success'>(
     'idle',
@@ -52,9 +53,9 @@ export default function Groups() {
   const [proofError, setProofError] = useState<string>('');
   const [wldBalance, setWldBalance] = useState<number | null>(null);
 
-  // Carrega grupos disponíveis do localStorage (excluindo os que já entrou)
+  // Load available groups from localStorage (excluding already joined ones)
   useEffect(() => {
-    // Inicializa grupos padrão se necessário
+    // Initialize default groups if needed
     initializeAvailableGroups();
     
     const loadGroups = () => {
@@ -63,7 +64,7 @@ export default function Groups() {
     
     loadGroups();
     
-    // Listener para atualizações
+    // Listener for updates
     const handleUpdate = () => {
       loadGroups();
     };
@@ -88,7 +89,7 @@ export default function Groups() {
 
   const startProof = async () => {
     if (!selectedGroup || !session?.data?.user?.walletAddress) {
-      showToast('Erro: usuário não autenticado', 'error');
+      showToast('Error: user not authenticated', 'error');
       return;
     }
     
@@ -99,9 +100,9 @@ export default function Groups() {
     );
     
     try {
-      showToast('Iniciando geração de prova ZK...', 'info');
+      showToast('Starting ZK proof generation...', 'info');
       
-      // Passo 1: Checar saldo WLD
+      // Step 1: Check WLD balance
       setStepsStatus((prev) => {
         const newStatus = [...prev];
         newStatus[0] = 'active';
@@ -114,7 +115,7 @@ export default function Groups() {
       
       if (balance < selectedGroup.minWld) {
         throw new Error(
-          `Saldo insuficiente. Você possui ${balance.toFixed(2)} WLD, mas precisa de ${selectedGroup.minWld} WLD.`
+          `Insufficient balance. You have ${balance.toFixed(2)} WLD, but need ${selectedGroup.minWld} WLD.`
         );
       }
       
@@ -125,12 +126,12 @@ export default function Groups() {
         return newStatus;
       });
       
-      // Passo 2: Gerar prova ZK
+      // Step 2: Generate ZK proof
       const nonce = generateRandomNonce();
-      // O circuito espera valores em u64 (números inteiros)
-      // Convertemos WLD para a menor unidade (assumindo 18 decimais como padrão ERC20)
-      // Mas podemos usar valores diretos se o circuito aceitar decimais
-      // Por enquanto, vamos usar valores inteiros multiplicados por 1e18 para precisão
+      // The circuit expects u64 values (integers)
+      // We convert WLD to the smallest unit (assuming 18 decimals as ERC20 standard)
+      // But we can use direct values if the circuit accepts decimals
+      // For now, we'll use integer values multiplied by 1e18 for precision
       const thresholdScaled = Math.floor(selectedGroup.minWld * 1e18);
       const balanceScaled = Math.floor(balance * 1e18);
       
@@ -142,8 +143,8 @@ export default function Groups() {
       };
       
       const onProgress = (progress: number, text: string) => {
-        console.log(`Progresso: ${progress}% - ${text}`);
-        // Atualiza o progresso visual
+        console.log(`Progress: ${progress}% - ${text}`);
+        // Update visual progress
         if (progress >= 30 && progress < 60) {
           setStepsStatus((prev) => {
             const newStatus = [...prev];
@@ -163,7 +164,7 @@ export default function Groups() {
       const proofResult = await generateProof(proofInputs, onProgress);
       
       if (!proofResult.isValid) {
-        throw new Error('A prova gerada não é válida');
+        throw new Error('The generated proof is not valid');
       }
       
       setStepsStatus((prev) => {
@@ -173,8 +174,8 @@ export default function Groups() {
         return newStatus;
       });
       
-      // Passo 3: Enviar prova (opcional - pode ser feito no backend)
-      // Por enquanto, apenas simulamos
+      // Step 3: Send proof (optional - can be done on backend)
+      // For now, we just simulate
       await new Promise((resolve) => setTimeout(resolve, 500));
       
       setStepsStatus((prev) => {
@@ -183,15 +184,15 @@ export default function Groups() {
         return newStatus;
       });
       
-      // Passo 4: Confirmar acesso
+      // Step 4: Confirm access
       setProofState('success');
-      showToast('Prova ZK gerada com sucesso!', 'success');
+      showToast('ZK proof generated successfully!', 'success');
       
     } catch (error) {
-      console.error('Erro ao gerar prova ZK:', error);
+      console.error('Error generating ZK proof:', error);
       const errorMessage = error instanceof Error 
         ? error.message 
-        : 'Erro desconhecido ao gerar prova ZK';
+        : 'Unknown error generating ZK proof';
       setProofError(errorMessage);
       setProofState('idle');
       setStepsStatus(proofSteps.map(() => 'pending'));
@@ -199,8 +200,8 @@ export default function Groups() {
     }
   };
 
-  // Removido o useEffect antigo que simulava os passos
-  // Agora os passos são controlados diretamente pela função startProof
+  // Removed old useEffect that simulated steps
+  // Now steps are controlled directly by the startProof function
 
   const closeSheet = () => {
     setSelectedGroup(null);
@@ -212,38 +213,38 @@ export default function Groups() {
 
   const handleJoinGroup = () => {
     if (selectedGroup && proofState === 'success') {
-      // Adiciona o grupo à lista de grupos do usuário
+      // Add group to user's group list
       addJoinedGroup(selectedGroup);
       
-      // Remove o grupo dos grupos disponíveis
+      // Remove group from available groups
       removeAvailableGroup(selectedGroup.id);
       
-      // Atualiza a lista de grupos disponíveis
+      // Update available groups list
       setAvailableGroups(getAvailableGroupsExcludingJoined());
       
-      showToast(`Entrou no grupo ${selectedGroup.name}!`, 'success');
+      showToast(`Joined group ${selectedGroup.name}!`, 'success');
       
-      // Fecha o modal
+      // Close modal
       closeSheet();
       
-      // Navega para o chat do grupo
+      // Navigate to group chat
       router.push(`/chat/${selectedGroup.id}`);
     }
   };
 
   const handleCreate = () => {
     if (!newGroupName.trim()) {
-      setError('Adicione um nome.');
+      setError('Add a name.');
       return;
     }
     const min = Number(newGroupMinWld);
     if (Number.isNaN(min) || min <= 0) {
-      setError('Defina o mínimo de WLD.');
+      setError('Set minimum WLD.');
       return;
     }
     
     try {
-      // Cores de avatar aleatórias
+      // Random avatar colors
       const avatarColors = [
         'bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500',
         'bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500',
@@ -255,34 +256,39 @@ export default function Groups() {
       const randomAvatar =
         avatarColors[Math.floor(Math.random() * avatarColors.length)];
       
-      // Cria o grupo disponível
+      // Create available group
       const newGroup = createAvailableGroup(
         newGroupName.trim(),
-        `Grupo criado por ${session?.data?.user?.username || 'você'}`,
+        `Group created by ${session?.data?.user?.username || 'you'}`,
         min,
         randomAvatar,
       );
       
-      // Adiciona automaticamente o criador ao grupo (sem precisar de prova ZK)
-      addJoinedGroup(newGroup);
+      // Automatically add creator to group only if autoJoin is enabled
+      if (autoJoin) {
+        addJoinedGroup(newGroup);
+      }
       
       setError('');
       setIsCreating(false);
       setNewGroupName('');
       setNewGroupMinWld('');
+      setAutoJoin(true);
       
-      // Recarrega os grupos disponíveis
+      // Reload available groups
       setAvailableGroups(getAvailableGroupsExcludingJoined());
       
-      showToast(`Grupo "${newGroup.name}" criado com sucesso!`, 'success');
+      showToast(`Group "${newGroup.name}" created successfully!`, 'success');
       
-      // Navega para o chat do grupo criado
-      router.push(`/chat/${newGroup.id}`);
+      // Navigate to created group chat only if autoJoin is enabled
+      if (autoJoin) {
+        router.push(`/chat/${newGroup.id}`);
+      }
     } catch (err) {
       const errorMsg =
         err instanceof Error
           ? err.message
-          : 'Erro ao criar grupo. Tente novamente.';
+          : 'Error creating group. Please try again.';
       setError(errorMsg);
       showToast(errorMsg, 'error');
     }
@@ -297,7 +303,7 @@ export default function Groups() {
               Groups
             </p>
             <p className="text-2xl font-bold text-slate-900 tracking-tight">
-              Descubra e entre
+              Discover and join
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -358,7 +364,7 @@ export default function Groups() {
                   />
                 </svg>
               </div>
-              <p className="text-slate-500 font-medium">Nenhum grupo encontrado</p>
+              <p className="text-slate-500 font-medium">No groups found</p>
             </div>
           ) : (
             filteredGroups.map((group) => (
@@ -413,7 +419,7 @@ export default function Groups() {
                           d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                         />
                       </svg>
-                      <span className="font-medium">{group.members} membros</span>
+                      <span className="font-medium">{group.members} members</span>
                     </div>
                   </div>
 
@@ -515,7 +521,7 @@ export default function Groups() {
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                       />
                     </svg>
-                    {selectedGroup.members} membros
+                    {selectedGroup.members} members
                 </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-slate-900 to-slate-800 text-white px-3 py-1.5 text-xs font-bold shadow-sm">
                     <svg
@@ -531,7 +537,7 @@ export default function Groups() {
                         d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    Mínimo: {selectedGroup.minWld} WLD
+                    Minimum: {selectedGroup.minWld} WLD
                 </span>
                 </div>
               </div>
@@ -574,7 +580,7 @@ export default function Groups() {
                                 </span>
                               </h3>
                               <p className="text-xs text-slate-500 font-mono">
-                                Verificação criptográfica privada
+                                Private cryptographic verification
                               </p>
                             </div>
                   </div>
@@ -589,21 +595,21 @@ export default function Groups() {
                             )}
                           >
                             {proofState === 'success'
-                              ? '✓ Verificado'
+                              ? '✓ Verified'
                               : proofState === 'running'
-                                ? '⚡ Processando'
-                                : '○ Pendente'}
+                                ? '⚡ Processing'
+                                : '○ Pending'}
                   </span>
                         </div>
                         <div className="bg-slate-900/5 rounded-lg p-3 border border-slate-200/50 mb-4">
                           <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                            <span className="font-bold text-slate-900">Zero-Knowledge:</span> Prove que você possui{' '}
-                            <span className="font-bold text-indigo-700">{selectedGroup.minWld} WLD</span> sem revelar
-                            seu saldo completo ou endereço. A prova criptográfica garante privacidade total.
+                            <span className="font-bold text-slate-900">Zero-Knowledge:</span> Prove you have{' '}
+                            <span className="font-bold text-indigo-700">{selectedGroup.minWld} WLD</span> without revealing
+                            your full balance or address. The cryptographic proof guarantees total privacy.
                           </p>
                           {wldBalance !== null && (
                             <p className="text-xs text-slate-600 mt-2">
-                              Seu saldo: <span className="font-bold">{wldBalance.toFixed(2)} WLD</span>
+                              Your balance: <span className="font-bold">{wldBalance.toFixed(2)} WLD</span>
                             </p>
                           )}
                         </div>
@@ -720,10 +726,10 @@ export default function Groups() {
                               )}
                               <p className="text-xs text-slate-600 font-medium">
                           {stepsStatus[idx] === 'active'
-                                  ? 'Gerando prova criptográfica...'
+                                  ? 'Generating cryptographic proof...'
                             : stepsStatus[idx] === 'done'
-                                    ? '✓ Verificado e assinado'
-                                    : 'Aguardando início'}
+                                    ? '✓ Verified and signed'
+                                    : 'Waiting to start'}
                               </p>
                             </div>
                             {stepsStatus[idx] === 'active' && (
@@ -759,17 +765,17 @@ export default function Groups() {
                           <div className="absolute -inset-1 bg-emerald-300 rounded-full opacity-30 animate-pulse"></div>
                         </div>
                         <h3 className="text-2xl font-bold text-slate-900 mb-2 text-center">
-                          Prova ZK Verificada!
+                          ZK Proof Verified!
                         </h3>
                         <p className="text-sm text-slate-600 text-center mb-6 max-w-xs">
-                          Sua prova criptográfica foi gerada e validada com sucesso. Você pode entrar no grupo agora.
+                          Your cryptographic proof has been generated and validated successfully. You can join the group now.
                         </p>
                         <button
                           onClick={handleJoinGroup}
                           className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-6 py-4 text-base font-bold text-white shadow-xl transition-all duration-200 hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
                         >
                           <span className="flex items-center justify-center gap-2">
-                            Entrar no grupo
+                            Join group
                             <svg
                               className="w-5 h-5"
                               fill="none"
@@ -802,7 +808,7 @@ export default function Groups() {
                           {proofState === 'running' ? (
                             <span className="flex items-center justify-center gap-2">
                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              <span className="font-mono text-xs">Gerando ZK-SNARK...</span>
+                              <span className="font-mono text-xs">Generating ZK-SNARK...</span>
                             </span>
                           ) : (
                             <span className="flex items-center justify-center gap-2">
@@ -819,7 +825,7 @@ export default function Groups() {
                                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                                 />
                               </svg>
-                              Gerar Zero-Knowledge Proof
+                              Generate Zero-Knowledge Proof
                             </span>
                           )}
                           {proofState !== 'running' && (
@@ -841,14 +847,17 @@ export default function Groups() {
           className="fixed bottom-28 right-5 flex items-center gap-2.5 rounded-full bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-3.5 text-sm font-bold text-white shadow-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-100 z-10"
         >
           <Plus className="w-5 h-5" />
-          <span>Criar grupo</span>
+          <span>Create group</span>
         </button>
 
         {/* Create Modal */}
         {isCreating && (
           <div
             className="fixed inset-0 z-30 flex items-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200"
-            onClick={() => setIsCreating(false)}
+            onClick={() => {
+              setIsCreating(false);
+              setAutoJoin(true);
+            }}
           >
             <div
               className="w-full max-h-[85vh] overflow-y-auto rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl animate-in slide-in-from-bottom duration-300"
@@ -864,14 +873,17 @@ export default function Groups() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <h2 className="text-2xl font-bold text-slate-900 mb-1">
-                      Criar grupo
+                      Create group
                     </h2>
                     <p className="text-sm text-slate-600 leading-relaxed">
-                      Configure o nome e o mínimo em WLD necessário para entrar.
+                      Configure the name and minimum WLD required to join.
                     </p>
                   </div>
                   <button
-                    onClick={() => setIsCreating(false)}
+                    onClick={() => {
+                      setIsCreating(false);
+                      setAutoJoin(true);
+                    }}
                     className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors ml-4"
                   >
                     <svg
@@ -895,19 +907,19 @@ export default function Groups() {
               <div className="px-6 py-6 space-y-5">
                 <label className="block space-y-2">
                   <span className="text-sm font-bold text-slate-900">
-                    Nome do grupo
+                    Group name
                   </span>
                   <input
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
-                    placeholder="Ex.: Builders SP"
+                    placeholder="e.g., Builders SP"
                     className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm font-normal text-slate-900 outline-none ring-2 ring-transparent focus:bg-white focus:border-slate-300 focus:ring-slate-200 transition-all"
                   />
                 </label>
 
                 <label className="block space-y-2">
                   <span className="text-sm font-bold text-slate-900">
-                    Mínimo em WLD para entrar
+                    Minimum WLD to join
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="shrink-0 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 text-white px-4 py-3 text-xs font-bold shadow-sm">
@@ -920,6 +932,23 @@ export default function Groups() {
                       placeholder="0.50"
                       className="flex-1 rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm font-normal text-slate-900 outline-none ring-2 ring-transparent focus:bg-white focus:border-slate-300 focus:ring-slate-200 transition-all"
                     />
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300 transition-all cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoJoin}
+                    onChange={(e) => setAutoJoin(e.target.checked)}
+                    className="mt-0.5 w-5 h-5 rounded border-2 border-slate-300 text-slate-900 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 cursor-pointer"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-bold text-slate-900 block mb-1">
+                      Automatically join the group
+                    </span>
+                    <span className="text-xs text-slate-600 leading-relaxed">
+                      If checked, you will automatically join the created group without needing a ZK proof.
+                    </span>
                   </div>
                 </label>
 
@@ -949,13 +978,16 @@ export default function Groups() {
                     onClick={handleCreate}
                     className="w-full rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                   >
-                    Criar grupo
+                    Create group
                   </button>
                   <button
-                    onClick={() => setIsCreating(false)}
+                    onClick={() => {
+                      setIsCreating(false);
+                      setAutoJoin(true);
+                    }}
                     className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-3.5 text-sm font-bold text-slate-700 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50"
                   >
-                    Cancelar
+                    Cancel
                   </button>
                 </div>
               </div>

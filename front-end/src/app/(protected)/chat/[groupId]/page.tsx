@@ -20,28 +20,28 @@ const sampleMessages: Message[] = [
   {
     id: '1',
     sender: 'Alex',
-    text: 'Nova call amanhã sobre circuitos. Alguém pode preparar o material?',
+    text: 'New call tomorrow about circuits. Can someone prepare the material?',
     timestamp: new Date(Date.now() - 3600000),
     isOwn: false,
   },
   {
     id: '2',
     sender: 'Carol',
-    text: 'Eu posso ajudar! Já tenho alguns exemplos prontos.',
+    text: 'I can help! I already have some examples ready.',
     timestamp: new Date(Date.now() - 3300000),
     isOwn: false,
   },
   {
     id: '3',
-    sender: 'Você',
-    text: 'Ótimo! Vou revisar o que temos até agora.',
+    sender: 'You',
+    text: 'Great! I will review what we have so far.',
     timestamp: new Date(Date.now() - 3000000),
     isOwn: true,
   },
   {
     id: '4',
     sender: 'Lia',
-    text: 'Atualizei o roadmap do sprint. Dêem uma olhada!',
+    text: 'Updated the sprint roadmap. Take a look!',
     timestamp: new Date(Date.now() - 1800000),
     isOwn: false,
   },
@@ -58,19 +58,19 @@ export default function ChatPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Verifica se o grupo existe na lista de grupos do usuário
+    // Check if group exists in user's group list
     const joinedGroups = getJoinedGroups();
     const foundGroup = joinedGroups.find((g) => g.id === groupId);
     
     if (!foundGroup) {
-      // Se não encontrou, redireciona para home
+      // If not found, redirect to home
       router.push('/home');
       return;
     }
     
     setGroup(foundGroup);
     
-    // Limpa as mensagens não lidas quando entra no chat
+    // Clear unread messages when entering chat
     clearUnread(groupId);
   }, [groupId, router]);
 
@@ -83,7 +83,7 @@ export default function ChatPage() {
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      sender: 'Você',
+      sender: 'You',
       text: inputText,
       timestamp: new Date(),
       isOwn: true,
@@ -91,8 +91,8 @@ export default function ChatPage() {
 
     setMessages([...messages, newMessage]);
     
-    // Atualiza a última mensagem no localStorage
-    updateGroupLastMessage(group.id, inputText, 'Você');
+    // Update last message in localStorage
+    updateGroupLastMessage(group.id, inputText, 'You');
     
     setInputText('');
     inputRef.current?.focus();
@@ -112,11 +112,11 @@ export default function ChatPage() {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return 'Agora';
+    if (minutes < 1) return 'Now';
     if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    return date.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' });
   };
 
   if (!group) {
@@ -124,7 +124,7 @@ export default function ChatPage() {
       <Page.Main className="flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-500">Carregando...</p>
+          <p className="text-slate-500">Loading...</p>
         </div>
       </Page.Main>
     );
@@ -157,7 +157,7 @@ export default function ChatPage() {
               {group.name}
             </h1>
             <p className="text-xs text-slate-500">
-              {group.members} membros
+              {group.members} members
             </p>
           </div>
         </div>
@@ -223,7 +223,7 @@ export default function ChatPage() {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Digite uma mensagem..."
+                placeholder="Type a message..."
                 className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm text-slate-900 placeholder:text-slate-400 outline-none ring-2 ring-transparent focus:bg-white focus:border-slate-300 focus:ring-slate-200 transition-all"
               />
             </div>

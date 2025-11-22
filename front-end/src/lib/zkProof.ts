@@ -33,10 +33,10 @@ export const generateProof = async (
     const { UltraHonkBackend } = await import("@aztec/bb.js");
     const { Noir } = await import("@noir-lang/noir_js");
     
-    onProgress?.(20, "Carregando circuito...");
+    onProgress?.(20, "Loading circuit...");
     const res = await fetch("/zk_noir_circuit.json");
     if (!res.ok) {
-      throw new Error(`Erro ao carregar circuito: ${res.statusText}`);
+      throw new Error(`Error loading circuit: ${res.statusText}`);
     }
     const circuit = await res.json();
     

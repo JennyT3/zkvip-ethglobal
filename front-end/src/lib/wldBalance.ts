@@ -79,43 +79,43 @@ export async function getWldBalance(address: string): Promise<number> {
       functionName: 'decimals',
     });
 
-    // Converte para WLD (formato decimal)
+    // Convert to WLD (decimal format)
     const balanceInWld = parseFloat(formatUnits(balance, decimals));
 
     return balanceInWld;
   } catch (error) {
-    console.error('Erro ao obter saldo WLD:', error);
+    console.error('Error getting WLD balance:', error);
     
-    // Fallback: retorna um valor mockado para desenvolvimento
-    // Em produção, você deve tratar o erro adequadamente
-    console.warn('Usando saldo mockado para desenvolvimento');
-    return 1.5; // Valor mockado para testes
+    // Fallback: returns a mocked value for development
+    // In production, you should handle the error appropriately
+    console.warn('Using mocked balance for development');
+    return 1.5; // Mocked value for testing
   }
 }
 
 /**
- * Obtém o saldo WLD usando MiniKit (se disponível)
- * Esta é uma alternativa que pode funcionar melhor no contexto do miniapp
+ * Gets WLD balance using MiniKit (if available)
+ * This is an alternative that may work better in the miniapp context
  */
 export async function getWldBalanceFromMiniKit(): Promise<number> {
   try {
-    // Tenta usar MiniKit se disponível
+    // Try to use MiniKit if available
     const { MiniKit } = await import('@worldcoin/minikit-js');
     
-    // MiniKit.user pode ter walletAddress ou address dependendo da versão
+    // MiniKit.user may have walletAddress or address depending on version
     const userAddress = (MiniKit?.user as { walletAddress?: string; address?: string })?.walletAddress 
       || (MiniKit?.user as { walletAddress?: string; address?: string })?.address;
     
     if (userAddress) {
-      // Se MiniKit tiver acesso direto ao saldo, use aqui
-      // Por enquanto, vamos usar a função padrão
+      // If MiniKit has direct access to balance, use it here
+      // For now, we'll use the default function
       return await getWldBalance(userAddress);
     }
     
-    throw new Error('MiniKit não disponível');
+    throw new Error('MiniKit not available');
   } catch (error) {
-    console.error('Erro ao obter saldo via MiniKit:', error);
-    // Fallback para função padrão
+    console.error('Error getting balance via MiniKit:', error);
+    // Fallback to default function
     return getWldBalance('0x0000000000000000000000000000000000000000');
   }
 }

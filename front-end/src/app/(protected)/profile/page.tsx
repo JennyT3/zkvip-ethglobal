@@ -41,7 +41,7 @@ export default function Profile() {
               Profile
             </p>
             <p className="text-2xl font-bold text-slate-900 tracking-tight">
-              Meu perfil
+              My profile
             </p>
           </div>
         </div>
@@ -67,9 +67,9 @@ export default function Profile() {
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-slate-900 mb-1 capitalize">
-                  {session?.data?.user?.username || 'Usuário'}
+                  {session?.data?.user?.username || 'User'}
                 </h2>
-                <p className="text-sm text-slate-500">Verificado pelo World ID</p>
+                <p className="text-sm text-slate-500">Verified by World ID</p>
               </div>
             </div>
 
@@ -79,7 +79,7 @@ export default function Profile() {
                 <div className="flex items-center gap-2 mb-2">
                   <Wallet className="w-4 h-4 text-slate-600" />
                   <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                    Endereço da Carteira
+                    Wallet Address
                   </span>
                 </div>
                 <p className="font-mono text-sm text-slate-900 break-all">
@@ -94,13 +94,13 @@ export default function Profile() {
                 <div className="flex items-center gap-2 mb-2">
                   <Shield className="w-4 h-4 text-indigo-600" />
                   <span className="text-xs font-semibold text-indigo-700">
-                    Prova ZK
+                    ZK Proof
                   </span>
                 </div>
                 <p className="text-2xl font-bold text-indigo-900">
                   {joinedGroups.length}
                 </p>
-                <p className="text-xs text-indigo-600 mt-1">Grupos ativos</p>
+                <p className="text-xs text-indigo-600 mt-1">Active groups</p>
               </div>
 
               <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 p-4">
@@ -111,7 +111,7 @@ export default function Profile() {
                   </span>
                 </div>
                 <p className="text-2xl font-bold text-emerald-900">✓</p>
-                <p className="text-xs text-emerald-600 mt-1">Verificado</p>
+                <p className="text-xs text-emerald-600 mt-1">Verified</p>
               </div>
             </div>
           </div>
@@ -136,27 +136,27 @@ export default function Profile() {
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-slate-900 mb-1">
-                  World ID Verificado
+                  World ID Verified
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Sua identidade foi verificada através do World ID, garantindo
-                  privacidade e segurança em todas as interações.
+                  Your identity has been verified through World ID, ensuring
+                  privacy and security in all interactions.
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 text-xs text-slate-600">
               <CheckCircleSolid className="w-4 h-4 text-blue-600" />
-              <span className="font-semibold">Identidade verificada</span>
+              <span className="font-semibold">Identity verified</span>
               <span className="text-slate-400">·</span>
-              <span>Privacidade garantida</span>
+              <span>Privacy guaranteed</span>
             </div>
           </div>
 
           {/* Groups Joined */}
           <div className="rounded-2xl bg-white border-2 border-slate-200 shadow-lg p-6">
             <h3 className="text-lg font-bold text-slate-900 mb-4">
-              Meus Grupos
+              My Groups
             </h3>
             {joinedGroups.length === 0 ? (
               <div className="text-center py-8">
@@ -176,7 +176,7 @@ export default function Profile() {
                   </svg>
                 </div>
                 <p className="text-slate-500 font-medium">
-                  Você ainda não está em nenhum grupo
+                  You are not in any group yet
                 </p>
               </div>
             ) : (
@@ -203,8 +203,8 @@ export default function Profile() {
                         {group.name}
                       </p>
                       <p className="text-xs text-slate-500">
-                        Entrou em{' '}
-                        {new Date(group.joinedAt).toLocaleDateString('pt-BR', {
+                        Joined on{' '}
+                        {new Date(group.joinedAt).toLocaleDateString('en-US', {
                           day: '2-digit',
                           month: 'short',
                         })}

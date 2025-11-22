@@ -16,8 +16,8 @@ import {
 import { showToast } from '@/components/Toast';
 
 const filterOptions = [
-  { key: 'all', label: 'Todos' },
-  { key: 'unread', label: 'Não lidos' },
+  { key: 'all', label: 'All' },
+  { key: 'unread', label: 'Unread' },
 ];
 
 export default function Home() {
@@ -27,10 +27,11 @@ export default function Home() {
   const [isCreating, setIsCreating] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupMinWld, setNewGroupMinWld] = useState('');
+  const [autoJoin, setAutoJoin] = useState(true);
   const [error, setError] = useState('');
   const [joinedGroups, setJoinedGroups] = useState<Group[]>([]);
 
-  // Carrega grupos do localStorage
+  // Load groups from localStorage
   useEffect(() => {
     const loadGroups = () => {
       setJoinedGroups(getJoinedGroups());
@@ -38,12 +39,12 @@ export default function Home() {
     
     loadGroups();
     
-    // Listener para mudanças no localStorage (de outras abas)
+    // Listener for localStorage changes (from other tabs)
     const handleStorageChange = () => {
       loadGroups();
     };
     
-    // Listener para quando a página recebe foco (volta de outra página)
+    // Listener for when page receives focus (returning from another page)
     const handleFocus = () => {
       loadGroups();
     };
@@ -51,10 +52,10 @@ export default function Home() {
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('focus', handleFocus);
     
-    // Polling para detectar mudanças na mesma aba
+    // Polling to detect changes in the same tab
     const interval = setInterval(loadGroups, 1000);
     
-    // Listener para eventos customizados (quando grupos são adicionados)
+    // Listener for custom events (when groups are added)
     window.addEventListener('groupsUpdated', loadGroups);
     
     return () => {
@@ -74,17 +75,17 @@ export default function Home() {
 
   const handleCreate = () => {
     if (!newGroupName.trim()) {
-      setError('Adicione um nome.');
+      setError('Add a name.');
       return;
     }
     const min = Number(newGroupMinWld);
     if (Number.isNaN(min) || min <= 0) {
-      setError('Defina o mínimo de WLD.');
+      setError('Set minimum WLD.');
       return;
     }
     
     try {
-      // Cores de avatar aleatórias
+      // Random avatar colors
       const avatarColors = [
         'bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500',
         'bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500',
@@ -96,31 +97,36 @@ export default function Home() {
       const randomAvatar =
         avatarColors[Math.floor(Math.random() * avatarColors.length)];
       
-      // Cria o grupo disponível
+      // Create available group
       const newGroup = createAvailableGroup(
         newGroupName.trim(),
-        `Grupo criado por ${session?.data?.user?.username || 'você'}`,
+        `Group created by ${session?.data?.user?.username || 'you'}`,
         min,
         randomAvatar,
       );
       
-      // Adiciona automaticamente o criador ao grupo (sem precisar de prova ZK)
-      addJoinedGroup(newGroup);
+      // Automatically add creator to group only if autoJoin is enabled
+      if (autoJoin) {
+        addJoinedGroup(newGroup);
+      }
       
       setError('');
       setIsCreating(false);
       setNewGroupName('');
       setNewGroupMinWld('');
+      setAutoJoin(true);
       
-      showToast(`Grupo "${newGroup.name}" criado com sucesso!`, 'success');
+      showToast(`Group "${newGroup.name}" created successfully!`, 'success');
       
-      // Navega para o chat do grupo criado
-      router.push(`/chat/${newGroup.id}`);
+      // Navigate to created group chat only if autoJoin is enabled
+      if (autoJoin) {
+        router.push(`/chat/${newGroup.id}`);
+      }
     } catch (err) {
       const errorMsg =
         err instanceof Error
           ? err.message
-          : 'Erro ao criar grupo. Tente novamente.';
+          : 'Error creating group. Please try again.';
       setError(errorMsg);
       showToast(errorMsg, 'error');
     }
@@ -202,20 +208,20 @@ export default function Home() {
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2">
                 {joinedGroups.length === 0
-                  ? 'Você ainda não está em nenhum grupo'
-                  : 'Nenhum grupo encontrado'}
+                  ? 'You are not in any group yet'
+                  : 'No groups found'}
               </h3>
               <p className="text-sm text-slate-500 text-center max-w-xs mb-6">
                 {joinedGroups.length === 0
-                  ? 'Explore grupos disponíveis na aba "Groups" e entre usando prova ZK para começar a conversar!'
-                  : 'Tente ajustar os filtros para ver mais grupos.'}
+                  ? 'Explore available groups in the "Groups" tab and join using ZK proof to start chatting!'
+                  : 'Try adjusting the filters to see more groups.'}
               </p>
               {joinedGroups.length === 0 && (
                 <button
                   onClick={() => router.push('/groups')}
                   className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
                 >
-                  Explorar grupos
+                  Explore groups
                 </button>
               )}
             </div>
@@ -304,14 +310,17 @@ export default function Home() {
           className="fixed bottom-28 right-5 flex items-center gap-2.5 rounded-full bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-3.5 text-sm font-bold text-white shadow-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-100 z-10"
         >
           <Plus className="w-5 h-5" />
-          <span>Criar grupo</span>
+          <span>Create group</span>
         </button>
 
         {/* Create Modal */}
         {isCreating && (
           <div
             className="fixed inset-0 z-30 flex items-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200"
-            onClick={() => setIsCreating(false)}
+            onClick={() => {
+              setIsCreating(false);
+              setAutoJoin(true);
+            }}
           >
             <div
               className="w-full max-h-[85vh] overflow-y-auto rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl animate-in slide-in-from-bottom duration-300"
@@ -327,14 +336,17 @@ export default function Home() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <h2 className="text-2xl font-bold text-slate-900 mb-1">
-                      Criar grupo
+                      Create group
                     </h2>
                     <p className="text-sm text-slate-600 leading-relaxed">
-                      Configure o nome e o mínimo em WLD necessário para entrar.
+                      Configure the name and minimum WLD required to join.
                     </p>
                   </div>
                   <button
-                    onClick={() => setIsCreating(false)}
+                    onClick={() => {
+                      setIsCreating(false);
+                      setAutoJoin(true);
+                    }}
                     className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors ml-4"
                   >
                     <svg
@@ -358,19 +370,19 @@ export default function Home() {
               <div className="px-6 py-6 space-y-5">
                 <label className="block space-y-2">
                   <span className="text-sm font-bold text-slate-900">
-                    Nome do grupo
+                    Group name
                   </span>
                   <input
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
-                    placeholder="Ex.: Builders SP"
+                    placeholder="e.g., Builders SP"
                     className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm font-normal text-slate-900 outline-none ring-2 ring-transparent focus:bg-white focus:border-slate-300 focus:ring-slate-200 transition-all"
                   />
                 </label>
 
                 <label className="block space-y-2">
                   <span className="text-sm font-bold text-slate-900">
-                    Mínimo em WLD para entrar
+                    Minimum WLD to join
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="shrink-0 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 text-white px-4 py-3 text-xs font-bold shadow-sm">
@@ -383,6 +395,23 @@ export default function Home() {
                       placeholder="0.50"
                       className="flex-1 rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm font-normal text-slate-900 outline-none ring-2 ring-transparent focus:bg-white focus:border-slate-300 focus:ring-slate-200 transition-all"
                     />
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300 transition-all cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoJoin}
+                    onChange={(e) => setAutoJoin(e.target.checked)}
+                    className="mt-0.5 w-5 h-5 rounded border-2 border-slate-300 text-slate-900 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 cursor-pointer"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-bold text-slate-900 block mb-1">
+                      Automatically join the group
+                    </span>
+                    <span className="text-xs text-slate-600 leading-relaxed">
+                      If checked, you will automatically join the created group without needing a ZK proof.
+                    </span>
                   </div>
                 </label>
 
@@ -412,13 +441,16 @@ export default function Home() {
                     onClick={handleCreate}
                     className="w-full rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                   >
-                    Criar grupo
+                    Create group
                   </button>
                   <button
-                    onClick={() => setIsCreating(false)}
+                    onClick={() => {
+                      setIsCreating(false);
+                      setAutoJoin(true);
+                    }}
                     className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-3.5 text-sm font-bold text-slate-700 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50"
                   >
-                    Cancelar
+                    Cancel
                   </button>
                 </div>
               </div>
