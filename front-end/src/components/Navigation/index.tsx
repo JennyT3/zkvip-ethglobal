@@ -1,9 +1,10 @@
 'use client';
 
-import { TabItem, Tabs } from '@worldcoin/mini-apps-ui-kit-react';
-import { Community, User, ViewGrid } from 'iconoir-react';
+import { TabItem, Tabs, Marble } from '@worldcoin/mini-apps-ui-kit-react';
+import { Community, ViewGrid } from 'iconoir-react';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 /**
  * This component uses the UI Kit to navigate between pages
@@ -15,6 +16,7 @@ import { usePathname, useRouter } from 'next/navigation';
 export const Navigation = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const session = useSession();
   const [value, setValue] = useState('my-groups');
 
   useEffect(() => {
@@ -35,11 +37,22 @@ export const Navigation = () => {
   };
 
   return (
-    <Tabs value={value} onValueChange={handleChange}>
-      <TabItem value="my-groups" icon={<Community />} label="My groups" />
-      {/* TODO: Link to discover groups page */}
-      <TabItem value="groups" icon={<ViewGrid />} label="Groups" />
-      <TabItem value="profile" icon={<User />} label="Profile" />
-    </Tabs>
+    <div className="w-full pointer-events-auto">
+      <Tabs value={value} onValueChange={handleChange}>
+        <TabItem value="my-groups" icon={<Community />} label="My groups" />
+        {/* TODO: Link to discover groups page */}
+        <TabItem value="groups" icon={<ViewGrid />} label="Groups" />
+        <TabItem 
+          value="profile" 
+          icon={
+            <Marble 
+              src={session?.data?.user?.profilePictureUrl} 
+              className="w-5 h-5"
+            />
+          } 
+          label="Profile" 
+        />
+      </Tabs>
+    </div>
   );
 };

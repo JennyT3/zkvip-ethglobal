@@ -1,0 +1,19 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+optimizer = true
+optimizer_runs = 200
+evm_version = "paris"
+
+[profile.test]
+optimizer = true
+optimizer_runs = 100
+
+[rpc_endpoints]
+bsc = "https://bsc-dataseed1.bnbchain.org"
+bsc_testnet = "https://data-seed-prebsc-1-s1.binance.org:8545"
+
+[etherscan]
+bsc = { key = "${BSCSCAN_API_KEY}" }
+

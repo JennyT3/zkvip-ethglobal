@@ -1,0 +1,17 @@
+# Foundry files
+out/
+cache/
+lib/
+broadcast/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+

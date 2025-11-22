@@ -22,7 +22,7 @@ export default async function TabsLayout({
       <GroupsInitializer />
       <ToastContainer />
       {children}
-      <Page.Footer className="px-0 fixed bottom-0 w-full bg-white border-t border-slate-200 shadow-lg z-20">
+      <Page.Footer className="px-0 fixed bottom-0 w-full bg-white border-t border-slate-200 shadow-lg z-20 pointer-events-auto">
         <Navigation />
       </Page.Footer>
     </Page>

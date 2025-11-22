@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import { Page } from '@/components/PageLayout';
-import { Marble } from '@worldcoin/mini-apps-ui-kit-react';
+import { Marble, Skeleton, SkeletonTypography } from '@worldcoin/mini-apps-ui-kit-react';
 import { Plus } from 'iconoir-react';
 import { useMemo, useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -30,11 +30,17 @@ export default function Home() {
   const [autoJoin, setAutoJoin] = useState(true);
   const [error, setError] = useState('');
   const [joinedGroups, setJoinedGroups] = useState<Group[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load groups from localStorage
   useEffect(() => {
     const loadGroups = () => {
-      setJoinedGroups(getJoinedGroups());
+      setIsLoading(true);
+      // Simulate loading for better UX
+      setTimeout(() => {
+        setJoinedGroups(getJoinedGroups());
+        setIsLoading(false);
+      }, 300);
     };
     
     loadGroups();
@@ -189,7 +195,26 @@ export default function Home() {
 
         {/* Groups List */}
         <div className="px-6 space-y-3">
-          {filteredGroups.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-slate-200"
+                >
+                  <Skeleton className="w-14 h-14 rounded-2xl" />
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <SkeletonTypography className="h-5 w-32" />
+                      <SkeletonTypography className="h-4 w-12" />
+                    </div>
+                    <SkeletonTypography className="h-4 w-full" />
+                    <SkeletonTypography className="h-3 w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredGroups.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 px-4">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center mb-6">
                 <svg

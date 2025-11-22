@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import { Page } from '@/components/PageLayout';
-import { Marble, CircularIcon } from '@worldcoin/mini-apps-ui-kit-react';
+import { Marble, CircularIcon, ListItem, Chip, Skeleton, SkeletonTypography } from '@worldcoin/mini-apps-ui-kit-react';
 import { useSession } from 'next-auth/react';
 import { CheckCircleSolid, Wallet, User, Shield } from 'iconoir-react';
 import { getJoinedGroups, type Group } from '@/lib/groups';
@@ -11,10 +11,16 @@ import { useState, useEffect } from 'react';
 export default function Profile() {
   const session = useSession();
   const [joinedGroups, setJoinedGroups] = useState<Group[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadGroups = () => {
-      setJoinedGroups(getJoinedGroups());
+      setIsLoading(true);
+      // Simulate loading for better UX
+      setTimeout(() => {
+        setJoinedGroups(getJoinedGroups());
+        setIsLoading(false);
+      }, 300);
     };
     
     loadGroups();
@@ -31,6 +37,8 @@ export default function Profile() {
       window.removeEventListener('focus', handleUpdate);
     };
   }, []);
+
+  const isLoadingSession = session.status === 'loading';
 
   return (
     <>
@@ -51,69 +59,102 @@ export default function Profile() {
         <div className="px-6 pt-6 space-y-6">
           {/* Profile Card */}
           <div className="rounded-2xl bg-white border-2 border-slate-200 shadow-lg p-6">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="relative">
-                <Marble
-                  src={session?.data?.user?.profilePictureUrl}
-                  className="w-20 h-20 shadow-xl ring-4 ring-white"
-                />
-                {session?.data?.user?.profilePictureUrl && (
-                  <div className="absolute -bottom-1 -right-1">
+            {isLoadingSession ? (
+              <div className="flex items-center gap-4 mb-6">
+                <Skeleton className="w-20 h-20 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <SkeletonTypography className="h-7 w-32" />
+                  <SkeletonTypography className="h-4 w-40" />
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 mb-6">
+                <div className="relative">
+                  <Marble
+                    src={session?.data?.user?.profilePictureUrl}
+                    className="w-20 h-20 shadow-xl ring-4 ring-white"
+                  />
+                  <div className="absolute -bottom-1 -right-1 z-10">
                     <CircularIcon size="sm">
                       <CheckCircleSolid className="w-4 h-4 text-blue-600" />
                     </CircularIcon>
                   </div>
-                )}
-              </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-slate-900 mb-1 capitalize">
-                  {session?.data?.user?.username || 'User'}
-                </h2>
-                <p className="text-sm text-slate-500">Verified by World ID</p>
-              </div>
-            </div>
-
-            {/* Wallet Address */}
-            {(session?.data?.user?.walletAddress || session?.data?.user?.id) && (
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Wallet className="w-4 h-4 text-slate-600" />
-                  <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                    Wallet Address
-                  </span>
                 </div>
-                <p className="font-mono text-sm text-slate-900 break-all">
-                  {session.data.user.walletAddress || session.data.user.id}
-                </p>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-1 capitalize">
+                    {session?.data?.user?.username || 'User'}
+                  </h2>
+                  <p className="text-sm text-slate-500">Verified by World ID</p>
+                </div>
               </div>
             )}
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Shield className="w-4 h-4 text-indigo-600" />
-                  <span className="text-xs font-semibold text-indigo-700">
-                    ZK Proof
-                  </span>
-                </div>
-                <p className="text-2xl font-bold text-indigo-900">
-                  {joinedGroups.length}
-                </p>
-                <p className="text-xs text-indigo-600 mt-1">Active groups</p>
+            {/* Wallet Address */}
+            {isLoadingSession ? (
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-4">
+                <SkeletonTypography className="h-4 w-24 mb-2" />
+                <SkeletonTypography className="h-4 w-full" />
               </div>
+            ) : (
+              (session?.data?.user?.walletAddress || session?.data?.user?.id) && (
+                <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Wallet className="w-4 h-4 text-slate-600" />
+                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                      Wallet Address
+                    </span>
+                  </div>
+                  <p className="font-mono text-sm text-slate-900 break-all">
+                    {session.data.user.walletAddress || session.data.user.id}
+                  </p>
+                </div>
+              )
+            )}
 
-              <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <User className="w-4 h-4 text-emerald-600" />
-                  <span className="text-xs font-semibold text-emerald-700">
-                    Status
-                  </span>
+            {/* Stats */}
+            {isLoadingSession || isLoading ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 p-4">
+                  <SkeletonTypography className="h-4 w-16 mb-2" />
+                  <SkeletonTypography className="h-8 w-8 mb-1" />
+                  <SkeletonTypography className="h-3 w-20" />
                 </div>
-                <p className="text-2xl font-bold text-emerald-900">✓</p>
-                <p className="text-xs text-emerald-600 mt-1">Verified</p>
+                <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 p-4">
+                  <SkeletonTypography className="h-4 w-12 mb-2" />
+                  <SkeletonTypography className="h-6 w-16 mb-1" />
+                  <SkeletonTypography className="h-3 w-16" />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield className="w-4 h-4 text-indigo-600" />
+                    <span className="text-xs font-semibold text-indigo-700">
+                      ZK Proof
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold text-indigo-900">
+                    {joinedGroups.length}
+                  </p>
+                  <p className="text-xs text-indigo-600 mt-1">Active groups</p>
+                  {joinedGroups.length > 0 && (
+                    <Chip className="mt-2" variant="success" label="Verified" />
+                  )}
+                </div>
+
+                <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <User className="w-4 h-4 text-emerald-600" />
+                    <span className="text-xs font-semibold text-emerald-700">
+                      Status
+                    </span>
+                  </div>
+                  <Chip variant="success" label="✓ Verified" className="text-base" />
+                  <p className="text-xs text-emerald-600 mt-1">World ID</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* World ID Info */}
@@ -158,7 +199,22 @@ export default function Profile() {
             <h3 className="text-lg font-bold text-slate-900 mb-4">
               My Groups
             </h3>
-            {joinedGroups.length === 0 ? (
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200"
+                  >
+                    <Skeleton className="w-10 h-10 rounded-xl" />
+                    <div className="flex-1 space-y-2">
+                      <SkeletonTypography className="h-4 w-32" />
+                      <SkeletonTypography className="h-3 w-24" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : joinedGroups.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
                   <svg
@@ -198,18 +254,13 @@ export default function Profile() {
                         .map((word) => word[0])
                         .join('')}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-900 truncate">
-                        {group.name}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Joined on{' '}
-                        {new Date(group.joinedAt).toLocaleDateString('en-US', {
-                          day: '2-digit',
-                          month: 'short',
-                        })}
-                      </p>
-                    </div>
+                    <ListItem
+                      label={group.name}
+                      description={`Joined on ${new Date(group.joinedAt).toLocaleDateString('en-US', {
+                        day: '2-digit',
+                        month: 'short',
+                      })}`}
+                    />
                   </div>
                 ))}
               </div>
