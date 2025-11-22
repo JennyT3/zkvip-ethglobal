@@ -163,7 +163,7 @@ export default function ChatPage() {
         </div>
       </Page.Header>
 
-      <Page.Main className="flex flex-col bg-gradient-to-b from-slate-50 to-white p-0 pb-24">
+      <Page.Main className="flex flex-col bg-gradient-to-b from-slate-50 to-white p-0 pb-20">
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           {messages.map((message) => (

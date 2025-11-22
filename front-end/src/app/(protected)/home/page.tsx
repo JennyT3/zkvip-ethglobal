@@ -10,8 +10,10 @@ import { useRouter } from 'next/navigation';
 import {
   getJoinedGroups,
   createAvailableGroup,
+  addJoinedGroup,
   type Group,
 } from '@/lib/groups';
+import { showToast } from '@/components/Toast';
 
 const filterOptions = [
   { key: 'all', label: 'Todos' },
@@ -94,22 +96,33 @@ export default function Home() {
       const randomAvatar =
         avatarColors[Math.floor(Math.random() * avatarColors.length)];
       
-      createAvailableGroup(
+      // Cria o grupo disponível
+      const newGroup = createAvailableGroup(
         newGroupName.trim(),
         `Grupo criado por ${session?.data?.user?.username || 'você'}`,
         min,
         randomAvatar,
       );
       
+      // Adiciona automaticamente o criador ao grupo (sem precisar de prova ZK)
+      addJoinedGroup(newGroup);
+      
       setError('');
       setIsCreating(false);
       setNewGroupName('');
       setNewGroupMinWld('');
       
-      // Navega para a página de grupos para ver o grupo criado
-      router.push('/groups');
-    } catch (err: any) {
-      setError(err.message || 'Erro ao criar grupo. Tente novamente.');
+      showToast(`Grupo "${newGroup.name}" criado com sucesso!`, 'success');
+      
+      // Navega para o chat do grupo criado
+      router.push(`/chat/${newGroup.id}`);
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : 'Erro ao criar grupo. Tente novamente.';
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     }
   };
 
@@ -147,7 +160,7 @@ export default function Home() {
         </div>
       </Page.Header>
 
-      <Page.Main className="relative flex flex-col bg-gradient-to-b from-slate-50/50 to-white px-0 pb-32">
+      <Page.Main className="relative flex flex-col bg-gradient-to-b from-slate-50/50 to-white px-0 pb-28">
         {/* Filter Section */}
         <div className="sticky top-0 z-10 bg-gradient-to-b from-slate-50/95 to-transparent backdrop-blur-sm px-6 pt-6 pb-4">
           <div className="flex gap-2.5 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -288,7 +301,7 @@ export default function Home() {
         {/* Create Button */}
         <button
           onClick={() => setIsCreating(true)}
-          className="fixed bottom-24 right-5 flex items-center gap-2.5 rounded-full bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-3.5 text-sm font-bold text-white shadow-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-100 z-10"
+          className="fixed bottom-28 right-5 flex items-center gap-2.5 rounded-full bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-3.5 text-sm font-bold text-white shadow-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-100 z-10"
         >
           <Plus className="w-5 h-5" />
           <span>Criar grupo</span>

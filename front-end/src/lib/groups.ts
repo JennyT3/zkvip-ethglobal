@@ -221,3 +221,25 @@ export const createAvailableGroup = (
   }
 };
 
+export const removeAvailableGroup = (groupId: string): void => {
+  if (typeof window === 'undefined') return;
+  
+  const availableGroups = getAvailableGroups();
+  const filteredGroups = availableGroups.filter((g) => g.id !== groupId);
+  
+  try {
+    localStorage.setItem(AVAILABLE_GROUPS_KEY, JSON.stringify(filteredGroups));
+    window.dispatchEvent(new Event('availableGroupsUpdated'));
+  } catch (error) {
+    console.error('Erro ao remover grupo disponível:', error);
+  }
+};
+
+export const getAvailableGroupsExcludingJoined = (): AvailableGroup[] => {
+  const availableGroups = getAvailableGroups();
+  const joinedGroups = getJoinedGroups();
+  const joinedIds = new Set(joinedGroups.map((g) => g.id));
+  
+  return availableGroups.filter((g) => !joinedIds.has(g.id));
+};
+
